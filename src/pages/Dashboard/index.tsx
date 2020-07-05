@@ -1,44 +1,68 @@
-import React from 'react';
+import React, { useState, useEffect, FormEvent } from 'react';
 import { FiChevronRight } from 'react-icons/fi';
 import logoImg from '../../assets/logo.svg';
 import { Title, Form, Repositories } from './styles';
+import api from '../../services/api';
+
+interface Repository {
+  full_name: string;
+  description: string;
+  owner: {
+    login: string;
+    avatar_url: string;
+  };
+}
 
 const Dashboard: React.FC = () => {
+  const [newRepo, setNewRepo] = useState('');
+  const [repositories, setRepositories] = useState<Repository[]>([]);
+
+  // useEffect(() => {
+  //   api.get();
+  // }, []);
+
+  async function handleAddRepository(
+    e: FormEvent<HTMLFormElement>,
+  ): Promise<void> {
+    e.preventDefault();
+
+    const response = await api.get<Repository>(`repos/${newRepo}`);
+
+    const repository = response.data;
+
+    setRepositories([...repositories, repository]);
+    setNewRepo('');
+  }
+
   return (
     <>
       <img src={logoImg} alt="Github Explorer" />
       <Title>Explore repositórios no Github.</Title>
 
-      <Form>
-        <input placeholder="Digite o nome do repositório" />
+      <Form onSubmit={handleAddRepository}>
+        <input
+          placeholder="Digite o nome do repositório"
+          value={newRepo}
+          onChange={e => setNewRepo(e.target.value)}
+        />
         <button type="button">Pesquisar</button>
       </Form>
 
       <Repositories>
-        <a href="sadasd">
-          <img
-            src="https://avatars2.githubusercontent.com/u/26195401?s=460&u=6ef94d387483ba3cd321981ea0e5bdd18e6f1d75&v=4"
-            alt="sadasdasd"
-          />
-          <div>
-            <strong>Title</strong>
-            <p>Description</p>
-          </div>
+        {repositories.map(repository => (
+          <a key={repository.full_name} href="sadasd">
+            <img
+              src={repository.owner.avatar_url}
+              alt={repository.owner.login}
+            />
+            <div>
+              <strong>{repository.full_name}</strong>
+              <p>{repository.description}</p>
+            </div>
 
-          <FiChevronRight />
-        </a>
-        <a href="sadasd">
-          <img
-            src="https://avatars2.githubusercontent.com/u/26195401?s=460&u=6ef94d387483ba3cd321981ea0e5bdd18e6f1d75&v=4"
-            alt="sadasdasd"
-          />
-          <div>
-            <strong>Title</strong>
-            <p>Description</p>
-          </div>
-
-          <FiChevronRight />
-        </a>
+            <FiChevronRight />
+          </a>
+        ))}
       </Repositories>
     </>
   );
